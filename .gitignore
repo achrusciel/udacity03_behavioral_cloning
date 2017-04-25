@@ -97,3 +97,5 @@ ENV/
 
 #PyCharm
 .idea
+/training_data/
+/configuration/init_config.py
