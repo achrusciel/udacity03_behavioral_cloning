@@ -20,6 +20,12 @@ MODEL_NAME = 'model_02.h5'
 BATCH_SIZE_DATA_GENERATOR = 64
 # endregion
 
+# region Hyperparameters
+EPOCHS = 5
+ANGLE_LEFT_ADJUSTMENT = 1.5
+ANGLE_RIGHT_ADJUSTMENT = 1.5
+# endregion
+
 # region Collecting data from file system
 data = []
 
@@ -41,30 +47,45 @@ def generator(samples, batch_size):
             images = []
             angles = []
             for batch_sample in batch_samples:
-                source_path = batch_sample[0]
-                filename = source_path.split('/')[-1]
-                current_path = TRAINING_DATA_PATH + 'IMG/' + filename
-                center_image = cv2.imread(current_path)
+                # Get the paths for the images from the sample
+                source_path_center_image = batch_sample[0]
+                source_path_left_image = batch_sample[1]
+                source_path_right_image = batch_sample[2]
+                # Get the file names of the images
+                filename_center_image = source_path_center_image.split('/')[-1]
+                filename_left_image = source_path_left_image.split('/')[-1]
+                filename_right_image = source_path_right_image.split('/')[-1]
+                current_path_center_image = TRAINING_DATA_PATH + 'IMG/' + filename_center_image
+                current_path_left_image = TRAINING_DATA_PATH + 'IMG/' + filename_left_image
+                current_path_right_image = TRAINING_DATA_PATH + 'IMG/' + filename_right_image
+                # Load the images and extract angles
+                center_image = cv2.imread(current_path_center_image)
                 center_image = cv2.cvtColor(center_image, cv2.COLOR_BGR2RGB)
                 center_angle = float(batch_sample[3])
-                # Data augmentation
+                left_image = cv2.imread(current_path_left_image)
+                left_image = cv2.cvtColor(left_image, cv2.COLOR_BGR2RGB)
+                left_angle = float(batch_sample[3]) * ANGLE_LEFT_ADJUSTMENT
+                right_image = cv2.imread(current_path_right_image)
+                right_image = cv2.cvtColor(right_image, cv2.COLOR_BGR2RGB)
+                right_angle = float(batch_sample[3]) * ANGLE_RIGHT_ADJUSTMENT
+                # Data augmentation for central images
                 flipped_image = center_image.copy()
                 flipped_image = cv2.flip(flipped_image, 1)
                 flipped_angle = center_angle * (-1.)
                 # Store training data
                 images.append(center_image)
-                images.append(flipped_image)
                 angles.append(center_angle)
+                images.append(flipped_image)
                 angles.append(flipped_angle)
+                images.append(left_image)
+                angles.append(left_angle)
+                images.append(right_image)
+                angles.append(right_angle)
 
             X_train = np.array(images)
             y_train = np.array(angles)
             yield shuffle(X_train, y_train)
 
-# endregion
-
-# region Hyperparameters
-EPOCHS = 5
 # endregion
 
 # region the model itself
